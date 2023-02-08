@@ -1,2 +1,2 @@
 # master-graduate-chapter5
-master-graduate-paper-chapter5
+this repo is for lat. planner
