@@ -26,6 +26,8 @@ class CarlaEnv10(gym.Env):
     self.desired_speed = params['desired_speed']
     self.dests = [[145,58.910496,0.275307]]
 
+    self.visualize = True  #是否可视化轨迹点
+
 
     # Connect to carla server and get world object
     print('connecting to Carla server...')
@@ -36,6 +38,7 @@ class CarlaEnv10(gym.Env):
 
     # Set weather
     self.world.set_weather(carla.WeatherParameters.ClearNoon)
+    
 
     # # Get spawn points
     # self.vehicle_spawn_points = list(self.world.get_map().get_spawn_points())
@@ -188,6 +191,14 @@ class CarlaEnv10(gym.Env):
     act = carla.VehicleControl(throttle=0, steer=0, brake=0)
     self.ego.apply_control(act)
     self.world.tick()
+
+    # to visualize
+    if self.visualize:
+      debug_point = carla.Location()
+      debug_point.x = self.ego.get_transform().location.x + 3
+      debug_point.y = self.ego.get_transform().location.y 
+      debug_point.z = self.ego.get_transform().location.z
+      self.world.debug.draw_point(location=debug_point,size=1, color=(255,0,0))
 
     # Update timesteps
     self.time_step += 1
