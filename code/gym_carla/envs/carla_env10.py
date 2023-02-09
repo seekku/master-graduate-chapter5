@@ -195,10 +195,10 @@ class CarlaEnv10(gym.Env):
     # to visualize
     if self.visualize:
       debug_point = carla.Location()
-      debug_point.x = self.ego.get_transform().location.x + 3
+      debug_point.x = self.ego.get_transform().location.x-5
       debug_point.y = self.ego.get_transform().location.y 
       debug_point.z = self.ego.get_transform().location.z
-      self.world.debug.draw_point(location=debug_point,size=1, color=(255,0,0))
+      self.world.debug.draw_point(debug_point,0.1,carla.Color(255,0,0),0)
 
     # Update timesteps
     self.time_step += 1
