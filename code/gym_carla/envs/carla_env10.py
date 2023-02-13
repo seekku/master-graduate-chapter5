@@ -38,6 +38,7 @@ class CarlaEnv10(gym.Env):
 
     # Set weather
     self.world.set_weather(carla.WeatherParameters.ClearNoon)
+    self.spectator = self.world.get_spectator()
     
 
     # # Get spawn points
@@ -159,6 +160,7 @@ class CarlaEnv10(gym.Env):
     # Update timesteps
     self.time_step=0
     self.reset_step+=1
+    # self.spectator.set_transform(carla.Transform(carla.Location(x=self.hero_location.x, y=self.hero_location.y, z = 40)))  # 89.9 to avoid gimbal lock
 
     # Enable sync mode
     self.settings.synchronous_mode = True
@@ -192,6 +194,11 @@ class CarlaEnv10(gym.Env):
     self.ego.apply_control(act)
     self.world.tick()
 
+    ego_location = carla.Location()
+    ego_location.x = self.ego.get_transform().location.x
+    ego_location.y = self.ego.get_transform().location.y
+    ego_location.z = self.ego.get_transform().location.z
+
     # to visualize
     if self.visualize:
       debug_point = carla.Location()
@@ -201,6 +208,7 @@ class CarlaEnv10(gym.Env):
       self.world.debug.draw_point(debug_point,0.1,carla.Color(255,0,0),0)
 
     # Update timesteps
+    self.spectator.set_transform(carla.Transform(carla.Location(x=ego_location.x, y=ego_location.y, z = 40)))
     self.time_step += 1
     self.total_step += 1
     self.info = None
