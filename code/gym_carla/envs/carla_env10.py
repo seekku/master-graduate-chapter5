@@ -208,7 +208,7 @@ class CarlaEnv10(gym.Env):
       self.world.debug.draw_point(debug_point,0.1,carla.Color(255,0,0),0)
 
     # Update timesteps
-    self.spectator.set_transform(carla.Transform(carla.Location(x=ego_location.x - 20, y=ego_location.y, z = 80),
+    self.spectator.set_transform(carla.Transform(carla.Location(x=ego_location.x - 20, y=ego_location.y, z = 60),
                                 carla.Rotation(yaw = 90, pitch = -90, roll = 0)))
     self.time_step += 1
     self.total_step += 1
