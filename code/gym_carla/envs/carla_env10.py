@@ -14,7 +14,50 @@ from gym import spaces
 from gym.utils import seeding
 import carla
 
-import trajectory_planner as planner
+#parameter
+init_s = 0
+end_s = -6   #there should be consistent to env  +/-
+
+Delta = 11
+
+
+def solve_matrix(l0,l1):
+    S = np.array([[init_s**5,init_s**4,init_s**3,init_s**2,init_s,1],
+                  [5*init_s**4,4*init_s**3,3*init_s**2,2*init_s,1,0],
+                  [20*init_s**3,12*init_s**2,6*init_s,2,0,0],
+                  [end_s**5,end_s**4,end_s**3,end_s**2,end_s,1],
+                  [5*end_s**4,4*end_s**3,3*end_s**2,2*end_s,1,0],
+                  [20*end_s**3,12*end_s**2,6*end_s,2,0,0]])
+    l = np.array([[l0],[0],[0],[l1],[0],[0]])  #l的偏移
+    a = np.linalg.solve(S,l)        #权重系数
+
+    return a
+
+
+def calculate_point(a):
+    s_list = []
+    l_list = []
+    for i in range(Delta):
+        s = init_s + i*(end_s-init_s)/((Delta-1)*1.00)  
+        l = a[0]*s**5+a[1]*s**4+a[2]*s**3+a[3]*s**2+a[4]*s+a[5]
+        s_list.append(s)
+        l_list.append(l)
+    return s_list,l_list
+
+
+def XYtoSL(x0,y0):
+    pass
+
+
+def SLtoXY(x0,y0,s,l):
+    x = []
+    y = []
+    for i in range(len(s)):
+        x.append(s[i]+x0)
+        y.append(l[i]+y0)
+
+    return x,y
+
 
 
 class CarlaEnv10(gym.Env):
@@ -205,18 +248,19 @@ class CarlaEnv10(gym.Env):
 
     # carla.Location(x=181.5, y=59, z=0.275307)  #车辆的起初位置。
     # planner.XYtoSL(x0=181.5,y0=59)
-    SL_matrix = planner.solve_matrix(0,1)
-    S,L = planner.calculate_point(SL_matrix)
-    X,Y = planner.SLtoXY(x0=181.5,y0=59,s=S,l=L)
+    SL_matrix = solve_matrix(0,2)
+    S,L = calculate_point(SL_matrix)
+    X,Y = SLtoXY(x0=181.5,y0=58.9,s=S,l=L)
 
 
     if self.visualize:
       for i in range(len(X)):
         debug_point = carla.Location()
-        debug_point.x = X-5
-        debug_point.y = Y
-        debug_point.z = self.ego.get_transform().location.z
-        self.world.debug.draw_point(debug_point,0.01,carla.Color(0,0,0),0)
+        # print(type(debug_point.x))
+        debug_point.x = float(X[i])-5
+        debug_point.y = float(Y[i])
+        debug_point.z = self.ego.get_transform().location.z+0.1
+        self.world.debug.draw_point(debug_point,0.05,carla.Color(255,0,0),0)
 
     # Update timesteps
     self.spectator.set_transform(carla.Transform(carla.Location(x=ego_location.x - 20, y=ego_location.y, z = 60),
