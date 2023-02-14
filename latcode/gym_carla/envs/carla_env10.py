@@ -18,7 +18,7 @@ import carla
 init_s = 0
 end_s = -6   #there should be consistent to env  +/-
 
-Delta = 11
+Delta = 21
 
 
 def solve_matrix(l0,l1):
@@ -257,13 +257,61 @@ class CarlaEnv10(gym.Env):
       for i in range(len(X)):
         debug_point = carla.Location()
         # print(type(debug_point.x))
-        debug_point.x = float(X[i])-5
+        debug_point.x = float(X[i])-2
+        debug_point.y = float(Y[i])
+        debug_point.z = self.ego.get_transform().location.z+0.1
+        self.world.debug.draw_point(debug_point,0.05,carla.Color(255,0,0),0)
+    
+    SL_matrix = solve_matrix(0,1)
+    S,L = calculate_point(SL_matrix)
+    X,Y = SLtoXY(x0=181.5,y0=58.9,s=S,l=L)
+    if self.visualize:
+      for i in range(len(X)):
+        debug_point = carla.Location()
+        # print(type(debug_point.x))
+        debug_point.x = float(X[i])-2
+        debug_point.y = float(Y[i])
+        debug_point.z = self.ego.get_transform().location.z+0.1
+        self.world.debug.draw_point(debug_point,0.05,carla.Color(255,0,0),0)
+
+    SL_matrix = solve_matrix(0,0)
+    S,L = calculate_point(SL_matrix)
+    X,Y = SLtoXY(x0=181.5,y0=58.9,s=S,l=L)
+    if self.visualize:
+      for i in range(len(X)):
+        debug_point = carla.Location()
+        # print(type(debug_point.x))
+        debug_point.x = float(X[i])-2
+        debug_point.y = float(Y[i])
+        debug_point.z = self.ego.get_transform().location.z+0.1
+        self.world.debug.draw_point(debug_point,0.05,carla.Color(255,0,0),0)
+
+    SL_matrix = solve_matrix(0,-1)
+    S,L = calculate_point(SL_matrix)
+    X,Y = SLtoXY(x0=181.5,y0=58.9,s=S,l=L)
+    if self.visualize:
+      for i in range(len(X)):
+        debug_point = carla.Location()
+        # print(type(debug_point.x))
+        debug_point.x = float(X[i])-2
+        debug_point.y = float(Y[i])
+        debug_point.z = self.ego.get_transform().location.z+0.1
+        self.world.debug.draw_point(debug_point,0.05,carla.Color(255,0,0),0)
+  
+    SL_matrix = solve_matrix(0,-2)
+    S,L = calculate_point(SL_matrix)
+    X,Y = SLtoXY(x0=181.5,y0=58.9,s=S,l=L)
+    if self.visualize:
+      for i in range(len(X)):
+        debug_point = carla.Location()
+        # print(type(debug_point.x))
+        debug_point.x = float(X[i])-2
         debug_point.y = float(Y[i])
         debug_point.z = self.ego.get_transform().location.z+0.1
         self.world.debug.draw_point(debug_point,0.05,carla.Color(255,0,0),0)
 
     # Update timesteps
-    self.spectator.set_transform(carla.Transform(carla.Location(x=ego_location.x - 20, y=ego_location.y, z = 60),
+    self.spectator.set_transform(carla.Transform(carla.Location(x=ego_location.x - 10, y=ego_location.y, z = 20),
                                 carla.Rotation(yaw = 90, pitch = -90, roll = 0)))
     self.time_step += 1
     self.total_step += 1
