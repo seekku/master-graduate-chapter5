@@ -14,6 +14,8 @@ from gym import spaces
 from gym.utils import seeding
 import carla
 
+import trajectory_planner as planner
+
 
 class CarlaEnv10(gym.Env):
   """An OpenAI gym wrapper for CARLA simulator."""
@@ -110,7 +112,7 @@ class CarlaEnv10(gym.Env):
 
     self.vehicle_spawn_points0 = carla.Transform(carla.Location(x=181.899918+np.random.uniform(-10,10), y=58.910496, z=0.275307), carla.Rotation(pitch=0.000000, yaw=179.852554, roll=0.000000))
     self.vehicle_spawn_points0 = carla.Transform(
-      carla.Location(x=181.5, y=58.910496, z=0.275307),
+      carla.Location(x=181.5, y=59, z=0.275307),
       carla.Rotation(pitch=0.000000, yaw=179.852554, roll=0.000000))
     self.vehicle_spawn_points1 = carla.Transform(carla.Location(x=157.899918, y=54.910496, z=0.275307), carla.Rotation(pitch=0.000000, yaw=179.852554, roll=0.000000))
     self.ego = self.world.spawn_actor(self.ego_bp,self.vehicle_spawn_points0)
@@ -200,12 +202,21 @@ class CarlaEnv10(gym.Env):
     ego_location.z = self.ego.get_transform().location.z
 
     # to visualize
+
+    # carla.Location(x=181.5, y=59, z=0.275307)  #车辆的起初位置。
+    # planner.XYtoSL(x0=181.5,y0=59)
+    SL_matrix = planner.solve_matrix(0,1)
+    S,L = planner.calculate_point(SL_matrix)
+    X,Y = planner.SLtoXY(x0=181.5,y0=59,s=S,l=L)
+
+
     if self.visualize:
-      debug_point = carla.Location()
-      debug_point.x = self.ego.get_transform().location.x-5
-      debug_point.y = self.ego.get_transform().location.y 
-      debug_point.z = self.ego.get_transform().location.z
-      self.world.debug.draw_point(debug_point,0.01,carla.Color(0,0,0),0)
+      for i in range(len(X)):
+        debug_point = carla.Location()
+        debug_point.x = X-5
+        debug_point.y = Y
+        debug_point.z = self.ego.get_transform().location.z
+        self.world.debug.draw_point(debug_point,0.01,carla.Color(0,0,0),0)
 
     # Update timesteps
     self.spectator.set_transform(carla.Transform(carla.Location(x=ego_location.x - 20, y=ego_location.y, z = 60),
@@ -336,3 +347,4 @@ class CarlaEnv10(gym.Env):
           if actor.type_id == 'controller.ai.walker':
             actor.stop()
           actor.destroy()
+  

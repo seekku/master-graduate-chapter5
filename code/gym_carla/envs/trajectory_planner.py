@@ -45,6 +45,21 @@ def calculate_point(a):
     return s_list,l_list
 
 
+def XYtoSL(x0,y0):
+    pass
+
+
+def SLtoXY(x0,y0,s,l):
+    x = []
+    y = []
+    for i in range(len(s)):
+        x.append(s[i]+x0)
+        y.append(l[i]+y0)
+
+    return x,y
+
+
+
 
 
 
