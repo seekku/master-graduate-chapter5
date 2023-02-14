@@ -205,7 +205,7 @@ class CarlaEnv10(gym.Env):
       debug_point.x = self.ego.get_transform().location.x-5
       debug_point.y = self.ego.get_transform().location.y 
       debug_point.z = self.ego.get_transform().location.z
-      self.world.debug.draw_point(debug_point,0.1,carla.Color(255,0,0),0)
+      self.world.debug.draw_point(debug_point,0.01,carla.Color(0,0,0),0)
 
     # Update timesteps
     self.spectator.set_transform(carla.Transform(carla.Location(x=ego_location.x - 20, y=ego_location.y, z = 60),
