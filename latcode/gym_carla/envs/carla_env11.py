@@ -257,28 +257,25 @@ class CarlaEnv11(gym.Env):
       else:
         self.target_L = 2
 
+      # to visualize
 
+      # carla.Location(x=181.5, y=59, z=0.275307)  #车辆的起初位置。
+      # planner.XYtoSL(x0=181.5,y0=59)
+      SL_matrix = solve_matrix(self.current_L,self.target_L)
+      S,L = calculate_point(SL_matrix)
+      X,Y = SLtoXY(x0=self.random_ego_x+(self.lat_count-1)*end_s,y0=59,s=S,l=L)
+      
+      if self.visualize:
+        for i in range(len(X)):
+          debug_point = carla.Location()
+          # print(type(debug_point.x))
+          debug_point.x = float(X[i])-2
+          debug_point.y = float(Y[i])
+          debug_point.z = self.ego.get_transform().location.z+0.1
+          ###planning point
+          self.world.debug.draw_point(debug_point,0.05,carla.Color(255,0,0),0)
     if self.info == True:
       self.info = False
-
-    # to visualize
-
-    # carla.Location(x=181.5, y=59, z=0.275307)  #车辆的起初位置。
-    # planner.XYtoSL(x0=181.5,y0=59)
-    SL_matrix = solve_matrix(self.current_L,self.target_L)
-    S,L = calculate_point(SL_matrix)
-    X,Y = SLtoXY(x0=181.5,y0=59,s=S,l=L)
-    
-    if self.visualize:
-      for i in range(len(X)):
-        debug_point = carla.Location()
-        # print(type(debug_point.x))
-        debug_point.x = float(X[i])-2
-        debug_point.y = float(Y[i])
-        debug_point.z = self.ego.get_transform().location.z+0.1
-        ###planning point
-        self.world.debug.draw_point(debug_point,0.05,carla.Color(255,0,0),0)
-
 
     steer = 0  #这个后期要修改，根据控制模型走。
     # Apply control
@@ -304,7 +301,7 @@ class CarlaEnv11(gym.Env):
       self.lat_count += 1
 
 
-    return (self._get_obs(), self._get_reward(), self._terminal(),[self.info,self._lat_get_reward()])  #这里也要增加一个维度。
+    return (self._get_obs(), self._get_reward(), self._terminal(),[self.info,self._lat_get_reward()])  
 
   def seed(self, seed=None):
     self.np_random, seed = seeding.np_random(seed)
