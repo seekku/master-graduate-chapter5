@@ -223,8 +223,6 @@ class CarlaEnv11(gym.Env):
     # Calculate acceleration and steering
     action = act[0]
     lat_action = act[1]
-    if self.info == True:
-      self.info = False
 
 
     throttle = 0
@@ -273,7 +271,7 @@ class CarlaEnv11(gym.Env):
           debug_point.y = float(Y[i])
           debug_point.z = self.ego.get_transform().location.z+0.1
           ###planning point
-          self.world.debug.draw_point(debug_point,0.05,carla.Color(255,0,0),0)
+          self.world.debug.draw_point(debug_point,0.05,carla.Color(255,0,0),2)
     if self.info == True:
       self.info = False
 
