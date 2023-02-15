@@ -16,7 +16,7 @@ print('time:',after-before)  #demo for Ax = b 求取x
 
 #parameter
 init_s = 0
-end_s = 6
+end_s = 6  #这个正负是需要根据地图修改的。
 
 Delta = 11
 
