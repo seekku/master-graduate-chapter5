@@ -156,8 +156,8 @@ class CarlaEnv11(gym.Env):
     self._set_synchronous_mode(False)
     spaw_points = self.world.get_map().get_spawn_points()
 
-
-    self.vehicle_spawn_points0 = carla.Transform(carla.Location(x=181.5+np.random.uniform(-10,10), y=59, z=0.275307), carla.Rotation(pitch=0.000000, yaw=179.852554, roll=0.000000))
+    self.random_ego_x = 181.5+np.random.uniform(-10,10)
+    self.vehicle_spawn_points0 = carla.Transform(carla.Location(x=self.random_ego_x, y=59, z=0.275307), carla.Rotation(pitch=0.000000, yaw=179.852554, roll=0.000000))
     # self.vehicle_spawn_points0 = carla.Transform(
     #   carla.Location(x=181.5, y=59, z=0.275307),
     #   carla.Rotation(pitch=0.000000, yaw=179.852554, roll=0.000000))
@@ -219,9 +219,10 @@ class CarlaEnv11(gym.Env):
 
     return self._get_obs()
   
-  def step(self, action,lat_action):
+  def step(self, act):
     # Calculate acceleration and steering
-
+    action = act[0]
+    lat_action = act[1]
     if self.info == True:
       self.info = False
 
@@ -266,7 +267,7 @@ class CarlaEnv11(gym.Env):
     # planner.XYtoSL(x0=181.5,y0=59)
     SL_matrix = solve_matrix(self.current_L,self.target_L)
     S,L = calculate_point(SL_matrix)
-    X,Y = SLtoXY(x0=181.5,y0=58.9,s=S,l=L)
+    X,Y = SLtoXY(x0=181.5,y0=59,s=S,l=L)
     
     if self.visualize:
       for i in range(len(X)):
@@ -298,12 +299,12 @@ class CarlaEnv11(gym.Env):
 
     # if self.info == True:
     #   self.info = False  #这个信息用于传递信号，应该如何传递信号呢？
-    if ego_location.x - self.vehicle_spawn_points0 < end_s * self.count + 0.5:  #这里需要记住一下，提前0.5m规划一下。
+    if ego_location.x - self.random_ego_x < end_s * self.lat_count + 0.5:  #这里需要记住一下，提前0.5m规划一下。
       self.info = True
-      self.count += 1
+      self.lat_count += 1
 
 
-    return (self._get_obs(), self._get_reward(), self._terminal(),self.info,self._lat_get_reward)  #这里也要增加一个维度。
+    return (self._get_obs(), self._get_reward(), self._terminal(),[self.info,self._lat_get_reward()])  #这里也要增加一个维度。
 
   def seed(self, seed=None):
     self.np_random, seed = seeding.np_random(seed)

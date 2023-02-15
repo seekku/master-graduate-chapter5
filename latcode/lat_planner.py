@@ -422,7 +422,9 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
             #  这里要想好怎么弄这些东西，加入双层。
             global lat_action  #看看这句命令是否必要
             lat_action = lat_agent.act(lat_state)  # ？？
-        next_state, reward, done, lat_decision_label,lat_reward = env.step(action,lat_action)    
+        total_action = [action,lat_action]
+        next_state, reward, done, info = env.step(total_action)    
+        lat_decision_label,lat_reward = info[0],info[1]
         agent.step(state, action, reward, next_state, done)
         if lat_decision_label or done:
             next_lat_state = next_state
@@ -506,7 +508,7 @@ params = {
 }
 
 np.random.seed(seed)
-env = gym.make('carla-v10', params=params)
+env = gym.make('carla-v11', params=params)
 
 env.seed(seed)
 # action_size = env.action_space.n
@@ -533,7 +535,7 @@ lat_agent = DQN_Agent(state_size=state_size,
                   layer_size=64,
                   n_step=n_step,
                   BATCH_SIZE=BATCH_SIZE,
-                  BUFFER_SIZE=BUFFER_SIZE*0.1,
+                  BUFFER_SIZE=1000,
                   LR=LR,
                   TAU=TAU,
                   GAMMA=GAMMA,
