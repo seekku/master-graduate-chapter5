@@ -36,7 +36,7 @@ class CarlaEnv(gym.Env):
 
     # Set weather
     self.world.set_weather(carla.WeatherParameters.ClearNoon)
-
+    self.spectator = self.world.get_spectator()
     # # Get spawn points
     # self.vehicle_spawn_points = list(self.world.get_map().get_spawn_points())
     # self.walker_spawn_points = []
@@ -188,6 +188,13 @@ class CarlaEnv(gym.Env):
     act = carla.VehicleControl(throttle=float(throttle), steer=float(-steer), brake=float(brake))
     self.ego.apply_control(act)
     self.world.tick()
+
+    ego_location = carla.Location()
+    ego_location.x = self.ego.get_transform().location.x
+    ego_location.y = self.ego.get_transform().location.y
+    ego_location.z = self.ego.get_transform().location.z
+    self.spectator.set_transform(carla.Transform(carla.Location(x=ego_location.x - 10, y=ego_location.y, z = 60),
+                                carla.Rotation(yaw = 90, pitch = -90, roll = 0)))
 
     # Update timesteps
     self.time_step += 1
