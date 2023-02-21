@@ -244,8 +244,6 @@ class DQN_Agent():
             loss = self.learn(experiences)
             self.Q_updates += 1
             # writer.add_scalar("Q_loss", loss, self.Q_updates)
-    
-
 
     def act(self, state, eps=0.):
         """Returns actions for given state as per current policy"""
@@ -314,9 +312,9 @@ class DQN_Agent():
         assert td_error.shape == (self.BATCH_SIZE, self.N, self.N), "wrong td error shape"
         huber_l = calculate_huber_loss(td_error, 1.0)
 
-        # print("taus:",taus.shape)
-        # print("td_error",td_error.shape)
-        # print("huber_l",huber_l.shape)
+        print("taus:",taus.shape)
+        print("td_error",td_error.shape)
+        print("huber_l",huber_l.shape)
         quantil_l = abs(taus_.unsqueeze(-1) - (td_error.detach() < 0).float()) * huber_l / 1.0
 
         loss = quantil_l.sum(dim=1).mean(dim=1)
@@ -410,27 +408,24 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
         eps = 1
     eps_start = 1
     i_episode = 1
-    state = env.reset()
-    lat_state = state  #横向的状态与纵向保持一致。
+    obs3 = env.reset()
+    obs2 = obs3
+    obs = obs2
+    state = np.concatenate((obs,obs2),axis=0)
+    state = np.concatenate((state,obs3),axis=0)
     score = 0
-    lat_decision_label = True  #第一次直接当作true,进入决策。
     for frame in range(1, frames + 1):
 
         action = agent.act(state, eps)
+        next_obs, reward, done, _ = env.step(action)
+        obs = obs2
+        obs2 = obs3
 
-        if lat_decision_label:
-            #  这里要想好怎么弄这些东西，加入双层。
-            global lat_action  #看看这句命令是否必要
-            lat_action = lat_agent.act(lat_state)  # ？？
-        total_action = [action,lat_action]
-        next_state, reward, done, info = env.step(total_action)    
-        lat_decision_label,lat_reward = info[0],info[1]
+        obs3 = next_obs
+        next_state = np.concatenate((obs,obs2),axis=0)
+        next_state = np.concatenate((next_state,obs3),axis=0)
+
         agent.step(state, action, reward, next_state, done)
-        if lat_decision_label or done:
-            next_lat_state = next_state
-            lat_agent.step(lat_state,lat_action,lat_reward,next_lat_state,done)
-            lat_state = next_lat_state
-
         state = next_state
         score += reward
         # linear annealing to the min epsilon value until eps_frames and from there slowly decease epsilon to 0 until the end of training
@@ -471,7 +466,12 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
                 collision = 0
                 success = 0
             i_episode += 1
-            state = env.reset()
+            obs3 = env.reset()
+            obs2 = obs3
+            obs = obs2
+
+            state = np.concatenate((obs,obs2),axis=0)
+            state = np.concatenate((state,obs3),axis=0)
             score = 0
 
     return output_history
@@ -503,18 +503,18 @@ params = {
     'dt': 0.1,  # time interval between two frames
     'port': 2000,  # connection port
     'town': 'Town03',  # which town to simulate
-    'max_time_episode': 1000,  # maximum timesteps per episode  #这里只是为了test，正常改为200/300就可以。
-    'desired_speed': 0,  # desired speed (m/s)
+    'max_time_episode': 250,  # maximum timesteps per episode
+    'desired_speed': 6,  # desired speed (m/s)
 }
 
 np.random.seed(seed)
-env = gym.make('carla-v11', params=params)
+env = gym.make('carla-v1', params=params)
 
 env.seed(seed)
 # action_size = env.action_space.n
 # state_size = env.observation_space.shape
 action_size = 6
-state_size = [6]
+state_size = [18]
 
 agent = DQN_Agent(state_size=state_size,
                   action_size=action_size,
@@ -530,19 +530,6 @@ agent = DQN_Agent(state_size=state_size,
                   seed=seed)
 
 
-lat_agent = DQN_Agent(state_size=state_size,
-                  action_size=5,
-                  layer_size=64,
-                  n_step=n_step,
-                  BATCH_SIZE=BATCH_SIZE,
-                  BUFFER_SIZE=1000,
-                  LR=LR,
-                  TAU=TAU,
-                  GAMMA=GAMMA,
-                  UPDATE_EVERY=UPDATE_EVERY,
-                  device=device,
-                  seed=seed)
-
 # set epsilon frames to 0 so no epsilon exploration
 eps_fixed = False
 
@@ -554,6 +541,3 @@ print("Training time: {}min".format(round((t1-t0)/60,2)))
 torch.save(agent.qnetwork_local.state_dict(), "lon_FQF-QNetseed50"+".pth")
 torch.save(agent.FPN.state_dict(),"lon_FQF-FPNseed50"+".pth")
 
-
-torch.save(lat_agent.qnetwork_local.state_dict(),"lat_FQF-QNetseed50"+".pth")
-torch.save(lat_agent.FPN.state_dict(),"lat_FQF-FPNseed50"+".pth")

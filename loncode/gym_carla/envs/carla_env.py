@@ -15,7 +15,7 @@ from gym.utils import seeding
 import carla
 
 
-class CarlaEnv2(gym.Env):
+class CarlaEnv(gym.Env):
   """An OpenAI gym wrapper for CARLA simulator."""
 
   def __init__(self, params):
@@ -103,9 +103,12 @@ class CarlaEnv2(gym.Env):
     self._set_synchronous_mode(False)
     spaw_points = self.world.get_map().get_spawn_points()
 
-
-    self.vehicle_spawn_points0 = carla.Transform(carla.Location(x=181.899918+np.random.uniform(-10,10), y=58.910496, z=0.275307), carla.Rotation(pitch=0.000000, yaw=179.852554, roll=0.000000))
-    self.vehicle_spawn_points1 = carla.Transform(carla.Location(x=157.899918, y=54.910496, z=0.275307), carla.Rotation(pitch=0.000000, yaw=179.852554, roll=0.000000))
+    self.random_ego_x = 181.5+np.random.uniform(-10,10)
+    self.vehicle_spawn_points0 = carla.Transform(carla.Location(x=self.random_ego_x, y=59, z=0.275307), carla.Rotation(pitch=0.000000, yaw=179.852554, roll=0.000000))
+    self.vehicle_spawn_points0 = carla.Transform(
+      carla.Location(x=181.5, y=58.910496, z=0.275307),
+      carla.Rotation(pitch=0.000000, yaw=179.852554, roll=0.000000))
+    self.vehicle_spawn_points1 = carla.Transform(carla.Location(x=158, y=55, z=0.275307), carla.Rotation(pitch=0.000000, yaw=179.852554, roll=0.000000))
     self.ego = self.world.spawn_actor(self.ego_bp,self.vehicle_spawn_points0)
 
     self.surround = self.world.try_spawn_actor(self.surround_bp,self.vehicle_spawn_points1)
@@ -167,16 +170,23 @@ class CarlaEnv2(gym.Env):
     throttle = 0
     brake = 0
 
-    if action<0:
-      brake = abs(action/2)
-    elif action>=0:
-      throttle = abs(action*4/5)
+    if action == 0:
+      brake = 0.5
+    elif action == 1:
+      brake = 0.25
+    elif action == 2:
+      throttle = 0.2
+    elif action == 3:
+      throttle = 0.4
+    elif action == 4:
+      throttle = 0.6
+    else:
+      throttle = 0.8
 
     steer = 0
     # Apply control
     act = carla.VehicleControl(throttle=float(throttle), steer=float(-steer), brake=float(brake))
     self.ego.apply_control(act)
-
     self.world.tick()
 
     # Update timesteps
