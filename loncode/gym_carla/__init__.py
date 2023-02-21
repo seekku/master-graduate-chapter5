@@ -7,16 +7,6 @@ register(
 
 
 register(
-    id='carla-v2',
-    entry_point='gym_carla.envs:CarlaEnv2',
-) 
-
-register(
-    id='carla-v10',
-    entry_point='gym_carla.envs:CarlaEnv10',
-) 
-
-register(
     id='carla-v11',
     entry_point='gym_carla.envs:CarlaEnv11',
 ) 

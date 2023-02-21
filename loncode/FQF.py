@@ -312,9 +312,7 @@ class DQN_Agent():
         assert td_error.shape == (self.BATCH_SIZE, self.N, self.N), "wrong td error shape"
         huber_l = calculate_huber_loss(td_error, 1.0)
 
-        print("taus:",taus.shape)
-        print("td_error",td_error.shape)
-        print("huber_l",huber_l.shape)
+
         quantil_l = abs(taus_.unsqueeze(-1) - (td_error.detach() < 0).float()) * huber_l / 1.0
 
         loss = quantil_l.sum(dim=1).mean(dim=1)
