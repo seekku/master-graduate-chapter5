@@ -503,7 +503,7 @@ params = {
     'dt': 0.1,  # time interval between two frames
     'port': 2000,  # connection port
     'town': 'Town03',  # which town to simulate
-    'max_time_episode': 1000,  # maximum timesteps per episode  #这里只是为了test，正常改为200/300就可以。
+    'max_time_episode': 250,  # maximum timesteps per episode  #这里只是为了test，正常改为200/300就可以。
     'desired_speed': 0,  # desired speed (m/s)
 }
 

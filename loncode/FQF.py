@@ -475,8 +475,8 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
     return output_history
 
 
-writer = SummaryWriter("runs/" + "FQF50")
-seed = 50
+writer = SummaryWriter("runs/" + "FQF40")
+seed = 40
 BUFFER_SIZE = 40000
 BATCH_SIZE = 64
 GAMMA = 0.99
@@ -536,6 +536,6 @@ final_average100 = run(frames = 100000, eps_fixed=eps_fixed, eps_frames=5000, mi
 t1 = time.time()
 
 print("Training time: {}min".format(round((t1-t0)/60,2)))
-torch.save(agent.qnetwork_local.state_dict(), "lon_FQF-QNetseed50"+".pth")
-torch.save(agent.FPN.state_dict(),"lon_FQF-FPNseed50"+".pth")
+torch.save(agent.qnetwork_local.state_dict(), "lon_FQF-QNetseed40"+".pth")
+torch.save(agent.FPN.state_dict(),"lon_FQF-FPNseed40"+".pth")
 

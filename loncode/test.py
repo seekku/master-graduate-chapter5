@@ -529,7 +529,7 @@ agent = DQN_Agent(state_size=state_size,
                   seed=seed)
 
 agent.qnetwork_local.load_state_dict(torch.load("lon_FQF-QNetseed50"+".pth"))
-agent.qnetwork_target.load_state_dict(torch.load("lon_FQF-FPNseed50"+".pth"))
+agent.FPN.load_state_dict(torch.load("lon_FQF-FPNseed50"+".pth"))
 
 # set epsilon frames to 0 so no epsilon exploration
 eps_fixed = False
