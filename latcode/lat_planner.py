@@ -410,24 +410,40 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
         eps = 1
     eps_start = 1
     i_episode = 1
-    state = env.reset()
+    obs3 = env.reset()
+    obs2 = obs3
+    obs = obs2
+    state = np.concatenate((obs,obs2),axis=0)
+    state = np.concatenate((state,obs3),axis=0)
     lat_state = state  #横向的状态与纵向保持一致。
     score = 0
+    lat_score = 0
     lat_decision_label = True  #第一次直接当作true,进入决策。
     for frame in range(1, frames + 1):
 
         action = agent.act(state, eps)
 
         if lat_decision_label:
+            print('make_decision:',frame)
             #  这里要想好怎么弄这些东西，加入双层。
             global lat_action  #看看这句命令是否必要
             lat_action = lat_agent.act(lat_state)  # ？？
+            print('lat_action:',lat_action)
         total_action = [action,lat_action]
-        next_state, reward, done, info = env.step(total_action)    
+        # print(total_action)
+        next_obs, reward, done, info = env.step(total_action)    
         lat_decision_label,lat_reward = info[0],info[1]
-        agent.step(state, action, reward, next_state, done)
+        lat_score += reward
+        obs = obs2
+        obs2 = obs3
+
+        obs3 = next_obs
+        next_state = np.concatenate((obs,obs2),axis=0)
+        next_state = np.concatenate((next_state,obs3),axis=0)
+        # agent.step(state, action, reward, next_state, done)
         if lat_decision_label or done:
             next_lat_state = next_state
+            lat_reward += reward
             lat_agent.step(lat_state,lat_action,lat_reward,next_lat_state,done)
             lat_state = next_lat_state
 
@@ -458,6 +474,7 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
                 writer.add_scalar("FQF Distributional RL reward",score,frame)
 
             print("last time reward:",reward)
+            print("this epoch lat_reward",lat_reward)
             print("this epoch reward:",score)
             # writer.add_scalar("Average100", np.mean(scores_window), frame)
             output_history.append(np.mean(scores_window))
@@ -471,14 +488,21 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
                 collision = 0
                 success = 0
             i_episode += 1
-            state = env.reset()
+            obs3 = env.reset()
+            obs2 = obs3
+            obs = obs2
+
+            state = np.concatenate((obs,obs2),axis=0)
+            state = np.concatenate((state,obs3),axis=0)
+            lat_state = state
             score = 0
+            lat_score = 0
 
     return output_history
 
 
-writer = SummaryWriter("runs/" + "FQF50")
-seed = 50
+writer = SummaryWriter("runs/" + "lat-FQF20")
+seed = 20
 BUFFER_SIZE = 40000
 BATCH_SIZE = 64
 GAMMA = 0.99
@@ -504,7 +528,7 @@ params = {
     'port': 2000,  # connection port
     'town': 'Town03',  # which town to simulate
     'max_time_episode': 250,  # maximum timesteps per episode  #这里只是为了test，正常改为200/300就可以。
-    'desired_speed': 0,  # desired speed (m/s)
+    'desired_speed': 6,  # desired speed (m/s)
 }
 
 np.random.seed(seed)
@@ -514,7 +538,7 @@ env.seed(seed)
 # action_size = env.action_space.n
 # state_size = env.observation_space.shape
 action_size = 6
-state_size = [6]
+state_size = [18]
 
 agent = DQN_Agent(state_size=state_size,
                   action_size=action_size,
@@ -546,13 +570,16 @@ lat_agent = DQN_Agent(state_size=state_size,
 # set epsilon frames to 0 so no epsilon exploration
 eps_fixed = False
 
+agent.qnetwork_local.load_state_dict(torch.load("loncode/lon_FQF-QNetseed20.pth"))
+agent.FPN.load_state_dict(torch.load("loncode/lon_FQF-FPNseed20.pth"))
+
 t0 = time.time()
-final_average100 = run(frames = 100000, eps_fixed=eps_fixed, eps_frames=5000, min_eps=0.05, collision = 0,writer=writer)
+final_average100 = run(frames = 150000, eps_fixed=eps_fixed, eps_frames=500, min_eps=0.05, collision = 0,writer=writer)
 t1 = time.time()
 
 print("Training time: {}min".format(round((t1-t0)/60,2)))
-torch.save(agent.qnetwork_local.state_dict(), "lon_FQF-QNetseed50"+".pth")
-torch.save(agent.FPN.state_dict(),"lon_FQF-FPNseed50"+".pth")
+# torch.save(agent.qnetwork_local.state_dict(), "lon_FQF-QNetseed50"+".pth")
+# torch.save(agent.FPN.state_dict(),"lon_FQF-FPNseed50"+".pth")
 
 
 torch.save(lat_agent.qnetwork_local.state_dict(),"lat_FQF-QNetseed50"+".pth")

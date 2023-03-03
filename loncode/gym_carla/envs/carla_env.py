@@ -235,6 +235,7 @@ class CarlaEnv(gym.Env):
       person_y = self.person.get_transform().location.y
     person_v = self.person.get_velocity()
     egovehicle_v = self.ego.get_velocity()
+    print(egovehicle_v.x)
     obs = [surround_x-ego_x,surround_y-ego_y,person_x-ego_x,person_y-ego_y,person_v.y,egovehicle_v.x] # relative location
 
     return obs

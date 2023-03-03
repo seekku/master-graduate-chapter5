@@ -194,7 +194,7 @@ class CarlaEnv11(gym.Env):
     walker_controller_actor.set_max_speed(1.5)  # max speed between 1 and 2 (default is 1.4 m/s)
 
     # self.ego.set_target_velocity(carla.Vector3D(-self.desired_speed,0,0))
-    self.ego.set_target_velocity(carla.Vector3D(0,0,0))
+    self.ego.set_target_velocity(carla.Vector3D(-self.desired_speed,0,0))
     # # Add camera sensor
     self.camera_sensor = self.world.spawn_actor(self.camera_bp, self.camera_trans, attach_to=self.ego)
     self.camera_sensor.listen(lambda data: get_camera_img(data))
@@ -262,15 +262,15 @@ class CarlaEnv11(gym.Env):
       self.current_L = self.target_L
 
       if lat_action == 0:
-        self.target_L = -2
-      elif lat_action == 1:
         self.target_L = -1
+      elif lat_action == 1:
+        self.target_L = -0.5
       elif lat_action == 2:
         self.target_L = 0
       elif lat_action == 3:
-        self.target_L = 1
+        self.target_L = 0.5
       else:
-        self.target_L = 2
+        self.target_L = 1
 
       # to visualize
 
@@ -292,47 +292,6 @@ class CarlaEnv11(gym.Env):
           self.world.debug.draw_point(debug_point,0.05,carla.Color(255,0,0),2)
     if self.info == True:
       self.info = False
-
-    
-    # #steer 根据Stanley跟踪模型走。Stanley算法有问题
-
-    # target_point = [ego_location.x-1,ego_location.y]
-    # num_i = 100
-    # for i in range(len(self.X)):
-    #   if ego_location.x > self.X[i] - 1:
-    #     continue
-    #   else:
-    #     target_point = [self.X[i],self.Y[i]]  #获取到最近的点
-    #     num_i = i
-    # if num_i==Delta-1 or num_i==100 :
-    #   target_heading = np.pi
-    # else:
-    #   arctan_target_heading = (self.Y[num_i+1]-self.Y[num_i])/abs(self.X[num_i+1]-self.X[num_i])
-    #   if arctan_target_heading>=0.01:
-    #     target_heading = -np.arctan(abs(arctan_target_heading)) + np.pi
-    #   elif arctan_target_heading <= -0.01:
-    #     target_heading = np.arctan(abs(arctan_target_heading)) + np.pi
-    #   else:
-    #     target_heading = np.pi
-    
-    # dx = target_point[0] - self.ego.get_transform().location.x
-    # dy = target_point[1] - self.ego.get_transform().location.y
-    # print('dy:',dy)
-    # # e_y = np.sqrt(dx*dx+dy*dy)
-    # e_y = abs(dy*np.cos(target_heading-np.pi)-dx*np.sin(target_heading-np.pi))
-    # if dy>0:
-    #   e_y = -e_y
-      
-    # e_theta = self.ego.get_transform().rotation.yaw*np.pi/180 - target_heading
-    
-    # print(e_theta)
-    # if ego_velcocity < 1:
-    #   steer = e_theta
-    # else:
-    #   steer = e_theta + np.arctan(e_y/ego_velcocity)
-    # steer = float(steer)
-
-
     
     #横向控制PID
     target_point = [self.ego.get_transform().location.x,self.ego.get_transform().location.y]
@@ -344,11 +303,14 @@ class CarlaEnv11(gym.Env):
     v_begin = self.ego.get_transform().location
     v_end = v_begin + carla.Location(x=math.cos(math.radians(self.ego.get_transform().rotation.yaw)),y=math.sin(math.radians(self.ego.get_transform().rotation.yaw)))
     v_vec = np.array([v_end.x-v_begin.x,v_end.y-v_begin.y,0.0])
-    w_vec = np.array([target_point[0]-v_begin.x,target_point[1]-v_begin.y,0.0])
+    w_vec = np.array([target_point[0]-v_begin.x, target_point[1]-v_begin.y , 0.0])
     # print(v_vec.shape)
     # print(v_begin.shape)
     _dot = math.acos(np.clip(np.dot(w_vec,v_vec)/(np.linalg.norm(w_vec)*np.linalg.norm(v_vec)),-1.0,1.0))
-    w_vec = np.array([w_vec[0],w_vec[1][0],w_vec[2]])  #这里是为了修复bug
+    # if  w_vec!=np.array([0,0,0]):
+    w_vec[1] = float(w_vec[1])
+    w_vec = np.array([w_vec[0],w_vec[1],w_vec[2]])
+    #   w_vec = np.array([w_vec[0],w_vec[1][0],w_vec[2]])  #这里是为了修复bug
     _cross = np.cross(v_vec,w_vec)
 
     if _cross[2]<0:
@@ -363,12 +325,9 @@ class CarlaEnv11(gym.Env):
     
     steer = float(np.clip(self.kp*_dot+self.kd*_de+self.ki*_ie,-1.0,1.0))
 
-
-    
-
     
     # Apply control
-    act = carla.VehicleControl(throttle=0.3, steer=steer, brake=0)
+    act = carla.VehicleControl(throttle=throttle, steer=steer, brake=brake)
     self.ego.apply_control(act)
     self.world.tick()
 
@@ -381,7 +340,7 @@ class CarlaEnv11(gym.Env):
 
     # if self.info == True:
     #   self.info = False  #这个信息用于传递信号，应该如何传递信号呢？
-    if ego_location.x - self.random_ego_x < end_s * self.lat_count + 0.5:  #这里需要记住一下，提前0.5m规划一下。
+    if ego_location.x - self.random_ego_x < end_s * self.lat_count + 2:  #这里需要记住一下，提前0.5m规划一下。
       self.info = True
       self.lat_count += 1
 
@@ -419,6 +378,7 @@ class CarlaEnv11(gym.Env):
       person_y = self.person.get_transform().location.y
     person_v = self.person.get_velocity()
     egovehicle_v = self.ego.get_velocity()
+    # print(egovehicle_v.x)
     obs = [surround_x-ego_x,surround_y-ego_y,person_x-ego_x,person_y-ego_y,person_v.y,egovehicle_v.x] # relative location
 
     return obs
@@ -460,7 +420,7 @@ class CarlaEnv11(gym.Env):
         if np.sqrt((ego_x-dest[0])**2+(ego_y-dest[1])**2)<2:
           r_success = 1
 
-    r = 1000 * r_collision + r_speed + r_acc + 500 * r_success + 200 * r_time
+    r = 1000 * r_collision + r_speed  + 500 * r_success + 200 * r_time
     return r
 
   def _terminal(self):

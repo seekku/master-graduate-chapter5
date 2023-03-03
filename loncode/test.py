@@ -475,8 +475,8 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
     return output_history
 
 
-writer = SummaryWriter("runs/" + "test-FQF50")
-seed = 50
+writer = SummaryWriter("runs/" + "test-FQF20")
+seed = 20
 BUFFER_SIZE = 40000
 BATCH_SIZE = 64
 GAMMA = 0.99
@@ -528,14 +528,14 @@ agent = DQN_Agent(state_size=state_size,
                   device=device,
                   seed=seed)
 
-agent.qnetwork_local.load_state_dict(torch.load("lon_FQF-QNetseed50"+".pth"))
-agent.FPN.load_state_dict(torch.load("lon_FQF-FPNseed50"+".pth"))
+agent.qnetwork_local.load_state_dict(torch.load("loncode/lon_FQF-QNetseed20"+".pth"))
+agent.FPN.load_state_dict(torch.load("loncode/lon_FQF-FPNseed20"+".pth"))
 
 # set epsilon frames to 0 so no epsilon exploration
 eps_fixed = False
 
 t0 = time.time()
-final_average100 = run(frames = 100000, eps_fixed=eps_fixed, eps_frames=5000, min_eps=0.05, collision = 0,writer=writer)
+final_average100 = run(frames = 100000, eps_fixed=eps_fixed, eps_frames=0, min_eps=0.05, collision = 0,writer=writer)
 t1 = time.time()
 
 print("Training time: {}min".format(round((t1-t0)/60,2)))
