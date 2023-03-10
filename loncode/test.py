@@ -13,6 +13,7 @@ import time
 import gym
 import gym_carla
 import carla
+import csv
 
 def weight_init(layers):
     for layer in layers:
@@ -412,6 +413,7 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
     state = np.concatenate((obs,obs2),axis=0)
     state = np.concatenate((state,obs3),axis=0)
     score = 0
+    all_distance = 0
     for frame in range(1, frames + 1):
 
         action = agent.act(state, eps)
@@ -440,6 +442,8 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
             print('-'*30)
 
         if done:
+            distance = env.calculate_run_distance()
+            all_distance += distance
             if reward< -400:
                 collision += 1
             if reward > 10:
@@ -459,6 +463,9 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
             #                                                                                 eps), end="")
             if i_episode % 100 == 0:
                 print('\rEpisode {}\tFrame {}\tAverage Score: {:.2f}\tCollision Rate: {:.2f}\t Success Rate:{:.2f}'.format(i_episode, frame, np.mean(scores_window),collision/100,success/100))
+                with open('testlonv1-20.csv','a') as f:
+                    writer1 = csv.writer(f)
+                    writer1.writerow([i_episode,frame,all_distance,np.mean(scores_window),collision/100,success/100])
                 writer.add_scalar("Success Rate",success/100,i_episode)
                 writer.add_scalar("collision Rate",collision/100,i_episode)
                 collision = 0
@@ -475,7 +482,7 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
     return output_history
 
 
-writer = SummaryWriter("runs/" + "test-FQF20")
+writer = SummaryWriter("runs/" + "test-lonv1-FQF20")
 seed = 20
 BUFFER_SIZE = 40000
 BATCH_SIZE = 64

@@ -235,7 +235,7 @@ class CarlaEnv(gym.Env):
       person_y = self.person.get_transform().location.y
     person_v = self.person.get_velocity()
     egovehicle_v = self.ego.get_velocity()
-    print(egovehicle_v.x)
+    # print(egovehicle_v.x)
     obs = [surround_x-ego_x,surround_y-ego_y,person_x-ego_x,person_y-ego_y,person_v.y,egovehicle_v.x] # relative location
 
     return obs
@@ -268,6 +268,8 @@ class CarlaEnv(gym.Env):
     acc = np.sqrt(a.x**2+a.y**2)
     r_acc = -abs(acc**2)
 
+    r_acc_x = abs(a.x)
+
     ego_x = self.ego.get_transform().location.x
     ego_y = self.ego.get_transform().location.y
 
@@ -277,7 +279,7 @@ class CarlaEnv(gym.Env):
         if np.sqrt((ego_x-dest[0])**2+(ego_y-dest[1])**2)<2:
           r_success = 1
 
-    r = 1000 * r_collision + r_speed + r_acc + 500 * r_success + 200 * r_time
+    r = 1000 * r_collision + r_speed + r_acc_x + 500 * r_success + 200 * r_time
     return r
 
   def _terminal(self):
@@ -324,3 +326,7 @@ class CarlaEnv(gym.Env):
           if actor.type_id == 'controller.ai.walker':
             actor.stop()
           actor.destroy()
+
+  def calculate_run_distance(self):
+    distance = self.random_ego_x - 145 - 1.4
+    return distance

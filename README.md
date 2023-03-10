@@ -12,3 +12,11 @@ carla_env10.py和visualize.py两个内容可以作为可视化的部分。
 
 
 loncode里面放置的是纵向规划器，实际上是第四章的内容。
+
+
+
+直线行驶规划——>loncode——>latcode——>loncode_v2
+
+lon_v2_2.0不错。
+
+

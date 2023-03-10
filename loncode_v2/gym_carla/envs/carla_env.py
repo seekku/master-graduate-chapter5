@@ -323,8 +323,3 @@ class CarlaEnv(gym.Env):
           if actor.type_id == 'controller.ai.walker':
             actor.stop()
           actor.destroy()
-
-
-  def calculate_run_distance(self):
-    distance = self.random_ego_x - 145 - 1.4
-    return distance

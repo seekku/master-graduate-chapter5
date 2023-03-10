@@ -449,7 +449,7 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
             next_lat_state = next_state
             total_lat_reward = latepoch_reward+ latepoch_lat_reward
             lat_reward += reward
-            lat_agent.step(lat_state,lat_action,lat_reward,next_lat_state,done)
+            # lat_agent.step(lat_state,lat_action,lat_reward,next_lat_state,done)
             lat_state = next_lat_state
             latepoch_reward = 0
             latepoch_lat_reward = 0
@@ -509,8 +509,8 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
     return output_history
 
 
-writer = SummaryWriter("runs/" + "lat-FQF20")
-seed = 20
+writer = SummaryWriter("runs/" + "test-lat-FQF40")
+seed = 40
 BUFFER_SIZE = 40000
 BATCH_SIZE = 64
 GAMMA = 0.99
@@ -578,8 +578,11 @@ lat_agent = DQN_Agent(state_size=state_size,
 # set epsilon frames to 0 so no epsilon exploration
 eps_fixed = False
 
-agent.qnetwork_local.load_state_dict(torch.load("loncode/lon_FQF-QNetseed20.pth"))
-agent.FPN.load_state_dict(torch.load("loncode/lon_FQF-FPNseed20.pth"))
+lat_agent.qnetwork_local.load_state_dict(torch.load("latcode/version3.0/lat_FQF-QNetseed40.pth"))
+lat_agent.FPN.load_state_dict(torch.load("latcode/version3.0/lat_FQF-FPNseed40.pth"))
+
+agent.qnetwork_local.load_state_dict(torch.load("loncode/lon_FQF-QNetseed40.pth"))
+agent.FPN.load_state_dict(torch.load("loncode/lon_FQF-FPNseed40.pth"))
 
 t0 = time.time()
 final_average100 = run(frames = 150000, eps_fixed=eps_fixed, eps_frames=500, min_eps=0.05, collision = 0,writer=writer)
@@ -590,5 +593,5 @@ print("Training time: {}min".format(round((t1-t0)/60,2)))
 # torch.save(agent.FPN.state_dict(),"lon_FQF-FPNseed50"+".pth")
 
 
-torch.save(lat_agent.qnetwork_local.state_dict(),"lat_FQF-QNetseed20"+".pth")
-torch.save(lat_agent.FPN.state_dict(),"lat_FQF-FPNseed20"+".pth")
+# torch.save(lat_agent.qnetwork_local.state_dict(),"lat_FQF-QNetseed20"+".pth")
+# torch.save(lat_agent.FPN.state_dict(),"lat_FQF-FPNseed20"+".pth")

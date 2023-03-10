@@ -19,7 +19,7 @@ import math
 
 #parameter
 init_s = 0
-end_s = -6   #there should be consistent to env  +/-
+end_s = -10   #there should be consistent to env  +/-
 
 Delta = 21
 
@@ -78,6 +78,8 @@ class CarlaEnv11(gym.Env):
     self.kp = 0.75
     self.ki = 0.4
     self.kd = 0.02
+
+    self.collision_sensor = self.world.get_blueprint_library().find('sensor.other.collision')
 
 
     # Connect to carla server and get world object
@@ -144,7 +146,13 @@ class CarlaEnv11(gym.Env):
   def reset(self):
     # Clear sensor objects
     self.collision = False
-    self.collision_sensor = None
+
+    transform = carla.Transform(carla.Location(x=0.8, z=1.7))
+    self.collision_sensor_detection = self.world.spawn_actor(self.collision_sensor, transform, attach_to=self.ego)
+    def callback_ego(event):
+            self.collision = True
+            print('collision!!!!!!!')
+    self.collision_sensor_detection.listen(callback_ego)
     self.lidar_sensor = None
     self.camera_sensor = None
     # self.camera_sensor2 = None
@@ -399,15 +407,22 @@ class CarlaEnv11(gym.Env):
 
     person_x = self.person.get_transform().location.x
     person_y = self.person.get_transform().location.y
-    if abs(person_x-ego_x)<3 and abs(person_y-ego_y)<2.5:
-      r_collision = -1
 
+
+    ### for train
+    # if abs(person_x-ego_x)<3 and abs(person_y-ego_y)<2.5:
+    #   r_collision = -1
+    ### for test
+    if self.collision:
+      r_collision = -1
+    
     r_time = 0
     if self.time_step>self.max_time_episode:
       r_time = -1
 
     # cost for cceleration
     a = self.ego.get_acceleration()
+    r_acc_x = -abs(a.x)
     acc = np.sqrt(a.x**2+a.y**2)
     r_acc = -abs(acc**2)
 
@@ -420,7 +435,7 @@ class CarlaEnv11(gym.Env):
         if np.sqrt((ego_x-dest[0])**2+(ego_y-dest[1])**2)<2:
           r_success = 1
 
-    r = 1000 * r_collision + r_speed  + 500 * r_success + 200 * r_time
+    r = 1000 * r_collision + r_speed  + r_acc_x +  500 * r_success + 200 * r_time
     return r
 
   def _terminal(self):
@@ -439,10 +454,22 @@ class CarlaEnv11(gym.Env):
 
     person_x = self.person.get_transform().location.x
     person_y = self.person.get_transform().location.y
-    if abs(person_x-ego_x)<3 and abs(person_y-ego_y)<2.5:
+
+
+    ##collision  for train
+    # if abs(person_x-ego_x)<3 and abs(person_y-ego_y)<2.5:
+    #   print(abs(person_x-ego_x),abs(person_y-ego_y))
+    #   print("ego vehicle speed:",speed)
+    #   return True
+    ## coliision for test
+    if self.collision:
       print(abs(person_x-ego_x),abs(person_y-ego_y))
       print("ego vehicle speed:",speed)
       return True
+
+
+
+
 
     # If reach maximum timestep
     if self.time_step>self.max_time_episode:
@@ -471,14 +498,14 @@ class CarlaEnv11(gym.Env):
   def _lat_get_reward(self):
     #这里就是看换道路
     if  self.current_L == self.target_L:
-      r = 0.5
+      r = 1
     elif abs( self.current_L-self.target_L)>1:
-      r = -1
+      r = -2
     else:
       r = 0
 
     if self.target_L == 0:
-      r += 0.5
+      r += 1
 
     return r 
 
@@ -501,3 +528,7 @@ class CarlaEnv11(gym.Env):
   
   def get_cte_heading_error(self,v):
     return 0
+
+  def calculate_run_distance(self):
+    distance = self.random_ego_x - 145 - 1.4
+    return distance

@@ -13,6 +13,8 @@ import time
 import gym
 import gym_carla
 import carla
+import csv
+
 
 def weight_init(layers):
     for layer in layers:
@@ -421,6 +423,7 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
     latepoch_reward = 0
     latepoch_lat_reward = 0
     lat_decision_label = True  #第一次直接当作true,进入决策。
+    all_distance = 0
     for frame in range(1, frames + 1):
 
         action = agent.act(state, eps)
@@ -449,7 +452,7 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
             next_lat_state = next_state
             total_lat_reward = latepoch_reward+ latepoch_lat_reward
             lat_reward += reward
-            lat_agent.step(lat_state,lat_action,lat_reward,next_lat_state,done)
+            # lat_agent.step(lat_state,lat_action,lat_reward,next_lat_state,done)
             lat_state = next_lat_state
             latepoch_reward = 0
             latepoch_lat_reward = 0
@@ -471,6 +474,8 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
             print('-'*30)
 
         if done:
+            distance = env.calculate_run_distance()
+            all_distance += distance
             if reward< -400:
                 collision += 1
             if reward > 10:
@@ -493,6 +498,11 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
                 print('\rEpisode {}\tFrame {}\tAverage Score: {:.2f}\tCollision Rate: {:.2f}\t Success Rate:{:.2f}'.format(i_episode, frame, np.mean(scores_window),collision/100,success/100))
                 writer.add_scalar("Success Rate",success/100,i_episode)
                 writer.add_scalar("collision Rate",collision/100,i_episode)
+                with open('testlonv2seed100-v2.0.csv','a') as f:
+                    writer1 = csv.writer(f)
+                    writer1.writerow([i_episode,frame,all_distance,np.mean(scores_window),collision/100,success/100])
+                writer.add_scalar("Success Rate",success/100,i_episode)
+                writer.add_scalar("collision Rate",collision/100,i_episode)
                 collision = 0
                 success = 0
             i_episode += 1
@@ -509,8 +519,8 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
     return output_history
 
 
-writer = SummaryWriter("runs/" + "lat-FQF20")
-seed = 20
+writer = SummaryWriter("runs/" + "lon2-test-lat-FQF100")
+seed = 100
 BUFFER_SIZE = 40000
 BATCH_SIZE = 64
 GAMMA = 0.99
@@ -578,17 +588,14 @@ lat_agent = DQN_Agent(state_size=state_size,
 # set epsilon frames to 0 so no epsilon exploration
 eps_fixed = False
 
-agent.qnetwork_local.load_state_dict(torch.load("loncode/lon_FQF-QNetseed20.pth"))
-agent.FPN.load_state_dict(torch.load("loncode/lon_FQF-FPNseed20.pth"))
+lat_agent.qnetwork_local.load_state_dict(torch.load("latcode/version3.0/lat_FQF-QNetseed100.pth"))
+lat_agent.FPN.load_state_dict(torch.load("latcode/version3.0/lat_FQF-FPNseed100.pth"))
+
+agent.qnetwork_local.load_state_dict(torch.load("lon_v2_2.0_FQF-QNetseed100.pth"))
+agent.FPN.load_state_dict(torch.load("lon_v2_2.0_FQF-FPNseed100.pth"))
 
 t0 = time.time()
-final_average100 = run(frames = 150000, eps_fixed=eps_fixed, eps_frames=500, min_eps=0.05, collision = 0,writer=writer)
+final_average100 = run(frames = 100000, eps_fixed=eps_fixed, eps_frames=0, min_eps=0.05, collision = 0,writer=writer)
 t1 = time.time()
 
 print("Training time: {}min".format(round((t1-t0)/60,2)))
-# torch.save(agent.qnetwork_local.state_dict(), "lon_FQF-QNetseed50"+".pth")
-# torch.save(agent.FPN.state_dict(),"lon_FQF-FPNseed50"+".pth")
-
-
-torch.save(lat_agent.qnetwork_local.state_dict(),"lat_FQF-QNetseed20"+".pth")
-torch.save(lat_agent.FPN.state_dict(),"lat_FQF-FPNseed20"+".pth")
