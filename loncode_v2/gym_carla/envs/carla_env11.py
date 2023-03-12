@@ -16,7 +16,7 @@ from gym import spaces
 from gym.utils import seeding
 import carla
 import math
-
+import csv
 #parameter
 init_s = 0
 end_s = -10   #there should be consistent to env  +/-
@@ -227,6 +227,8 @@ class CarlaEnv11(gym.Env):
     # Enable sync mode
     self.settings.synchronous_mode = True
     self.world.apply_settings(self.settings)
+    self.plot_distance = 171.5
+    self.velocity_list = []
 
     # Set ego information for render
 
@@ -261,6 +263,15 @@ class CarlaEnv11(gym.Env):
     ego_yaw = self.ego.get_transform().rotation.yaw
     ego_velcocity = math.sqrt(self.ego.get_velocity().x**2+self.ego.get_velocity().y**2)
     
+
+    #plot distance-velocity figure
+    
+    if ego_location.x<self.plot_distance:
+      self.velocity_list.append(float(abs(self.ego.get_velocity().x)))
+      self.plot_distance-=1
+
+      
+
     
     
     if self.info:  #这个label是不是可以换个和别的统一起来？
@@ -349,6 +360,10 @@ class CarlaEnv11(gym.Env):
       self.info = True
       self.lat_count += 1
 
+    if self._terminal():
+      with open('plot_sv.csv','a') as f:
+        csv_writer = csv.writer(f)
+        csv_writer.writerow([num for num in self.velocity_list])
 
     return (self._get_obs(), self._get_reward(), self._terminal(),[self.info,self._lat_get_reward()])  
 

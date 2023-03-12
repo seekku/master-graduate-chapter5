@@ -519,7 +519,7 @@ def run(frames=1000, eps_fixed=False, eps_frames=1e6, min_eps=0.01,collision = 0
     return output_history
 
 
-writer = SummaryWriter("runs/" + "lon2-test-lat-FQF100")
+writer = SummaryWriter("runs/" + "lon2-testplot-lat-FQF100")
 seed = 100
 BUFFER_SIZE = 40000
 BATCH_SIZE = 64
@@ -591,8 +591,8 @@ eps_fixed = False
 lat_agent.qnetwork_local.load_state_dict(torch.load("latcode/version3.0/lat_FQF-QNetseed100.pth"))
 lat_agent.FPN.load_state_dict(torch.load("latcode/version3.0/lat_FQF-FPNseed100.pth"))
 
-agent.qnetwork_local.load_state_dict(torch.load("lon_v2_2.0_FQF-QNetseed100.pth"))
-agent.FPN.load_state_dict(torch.load("lon_v2_2.0_FQF-FPNseed100.pth"))
+agent.qnetwork_local.load_state_dict(torch.load("lon_v2_FQF-QNetseed100.pth"))
+agent.FPN.load_state_dict(torch.load("lon_v2_FQF-FPNseed100.pth"))
 
 t0 = time.time()
 final_average100 = run(frames = 100000, eps_fixed=eps_fixed, eps_frames=0, min_eps=0.05, collision = 0,writer=writer)

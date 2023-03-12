@@ -13,7 +13,7 @@ import gym
 from gym import spaces
 from gym.utils import seeding
 import carla
-
+import csv
 
 class CarlaEnv(gym.Env):
   """An OpenAI gym wrapper for CARLA simulator."""
@@ -160,6 +160,8 @@ class CarlaEnv(gym.Env):
     # Enable sync mode
     self.settings.synchronous_mode = True
     self.world.apply_settings(self.settings)
+    self.plot_distance = 171.5
+    self.velocity_list = []
 
     # Set ego information for render
 
@@ -195,11 +197,22 @@ class CarlaEnv(gym.Env):
     ego_location.z = self.ego.get_transform().location.z
     self.spectator.set_transform(carla.Transform(carla.Location(x=ego_location.x - 10, y=ego_location.y, z = 60),
                                 carla.Rotation(yaw = 90, pitch = -90, roll = 0)))
+    
+    #plot distance-velocity figure
+    
+    if ego_location.x<self.plot_distance:
+      self.velocity_list.append(float(abs(self.ego.get_velocity().x)))
+      self.plot_distance-=1
 
     # Update timesteps
     self.time_step += 1
     self.total_step += 1
     self.info = None
+
+    if self._terminal():
+      with open('lonv1_plot_sv.csv','a') as f:
+        csv_writer = csv.writer(f)
+        csv_writer.writerow([num for num in self.velocity_list])
 
     return (self._get_obs(), self._get_reward(), self._terminal(),self.info)
 
